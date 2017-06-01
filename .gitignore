@@ -5,3 +5,17 @@
 *.scm~
 *.scm#*
 .#*.scm
+
+.jekyll-metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# racket and rosette binaries
+**/compiled
+**/compiled/**
+*~
