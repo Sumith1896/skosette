@@ -46,10 +46,10 @@
   (set! var-to-clauses (build-list (add1 num-var) (lambda (x) '())))
   (for ([clause clauses] [i (in-range 0 r)])
     (for ([literal clause])
-      ; let abs literal
-      (define curr-list (list-ref var-to-clauses (abs literal)))
-      (list-set var-to-clauses (abs literal) (cons i curr-list)))))
-
+      (let ([index (abs literal)])
+        (define curr-list (list-ref var-to-clauses index))
+        (set! var-to-clauses (list-set var-to-clauses index (cons i curr-list)))))))
+      
 (parse-dimacs-formula "benchmarks/arithmetic/in_qdimacs/ceiling32_bloqqer.qdimacs")
 
 ; (writeln r)
@@ -58,4 +58,4 @@
 ; (writeln x-list)
 ; (writeln y-list)
 ; (writeln clauses)
-(writeln var-to-clauses)
+; (writeln var-to-clauses)
