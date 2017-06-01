@@ -27,14 +27,14 @@
     (let* ([first-char (string-ref str 0)]
            [list-str (regexp-split #px" " str)])
       (cond
-        [(eq? str "c")]
-        [(eq? str "p") 
-          (set! num-var (string->number (string-ref list-str 2)))
-          (set! r (string->number (string-ref list-str 3)))]
-        [(eq? str "a")
+        [(char=? first-char #\c)]
+        [(char=? first-char #\p) 
+          (set! num-var (string->number (list-ref list-str 2)))
+          (set! r (string->number (list-ref list-str 3)))]
+        [(char=? first-char #\a)
           (define str-y-list (reverse (cdr (reverse (cdr list-str)))))
           (set! y-list (map string->number str-y-list))]
-        [(eq? str "e")
+        [(char=? first-char #\e)
           (define str-x-list (reverse (cdr (reverse (cdr list-str)))))
           (set! x-list (map string->number str-x-list))
           (set! n (length x-list))]
@@ -46,7 +46,16 @@
   (set! var-to-clauses (build-list (add1 num-var) (lambda (x) '())))
   (for ([clause clauses] [i (in-range 0 r)])
     (for ([literal clause])
+      ; let abs literal
       (define curr-list (list-ref var-to-clauses (abs literal)))
       (list-set var-to-clauses (abs literal) (cons i curr-list)))))
 
 (parse-dimacs-formula "benchmarks/arithmetic/in_qdimacs/ceiling32_bloqqer.qdimacs")
+
+; (writeln r)
+; (writeln num-var)
+; (writeln n)
+; (writeln x-list)
+; (writeln y-list)
+; (writeln clauses)
+(writeln var-to-clauses)
