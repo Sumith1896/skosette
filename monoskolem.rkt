@@ -180,7 +180,7 @@
              (let ([new-µ0 (substitute µ var #f)])
                (vector-add-to-list! r0 l new-µ0)
                (let ([new-µ1 (generalize π (vector-ref r1 l))])
-                 (loop (add1 l) new-µ0 new-µ1 (&& new-µ1 new-µ1))))]))
+                 (loop (add1 l) new-µ0 new-µ1 (&& new-µ1 new-µ0))))]))
 
     (r1->ψ r1)))
 
