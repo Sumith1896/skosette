@@ -9,9 +9,11 @@
 #lang racket
 
 (require (only-in rosette && || ! <=> define-symbolic* boolean?
-                  symbolics solve assert sat?)
+                  symbolics solve assert sat? solver-assert
+                  solver-push solver-pop current-solver)
          ;; Note that evaluate comes from util.rkt and not Rosette.
          "util.rkt")
+(require dyoo-while-loop)
 
 ; create a symbolic boolean, shorthand
 ; (define (!!) (define-symbolic* b boolean?) b)
@@ -151,7 +153,7 @@
 ;; Algorithm 4
 ;; r0, r1: Vector mapping each x variable to a list of formulas
 ;; pi: A sat? model (i.e. one produced by solve)
-(define (update-abs-ref x-vec r0 r1 π)
+(define (update-abs-ref x-vec r0 r1 π δ)
   (define (get-r-conjunct i) (&& (r-formula r0 i) (r-formula r1 i)))
 
   (let* ([n (vector-length x-vec)]
@@ -172,6 +174,7 @@
             [(evaluate var π)
              (let ([new-µ1 (substitute µ var #t)])
                (vector-add-to-list! r1 l new-µ1)
+               (vector-set! δ l (&& (vector-ref δ l) (! new-µ1)))
                (if (evaluate (r-formula r0 l) π)
                    (let ([new-µ0 (generalize π (vector-ref r0 l))])
                      (loop (add1 l) new-µ0 new-µ1 (&& new-µ0 new-µ1)))
@@ -192,19 +195,32 @@
          [x->fresh-var (for/hash ([x x-vec])
                          (define-symbolic* fresh-x boolean?)
                          (values x fresh-x))]
+         [fresh-inc    (lambda () (for/vector ([i (range n)])
+                         (define-symbolic* fresh-var boolean?)
+                         fresh-var))]
          [F            (apply && factors)]
-         [F-fresh      (substitute-all F x->fresh-var)])
-
-    (let loop ([ψ (init-abs-ref x-vec factors r0 r1)])
-      (let* ([equivalences (apply && (vector->list (vector-map <=> x-vec ψ)))]
-             [ε            (&& F-fresh equivalences (! F))]
-             [π            (solve (assert ε))])
-        ;(printf "Current values:~%r0:  ~a~%r1:  ~a~%psi: ~a~%ε:   ~a~%" r0 r1 ψ ε)
-        (when (sat? π)
-          (printf "Found a counterexample!~%" #;π)
-          (loop (update-abs-ref x-vec r0 r1 π)))))
+         [F-fresh      (substitute-all F x->fresh-var)]
+         [ψ            (init-abs-ref x-vec factors r0 r1)]
+         [α            (fresh-inc)]
+         [δ            (make-vector n #t)]
+         [equivalences (apply && (vector->list (vector-map <=> x-vec (vector-map && ψ α))))]
+         [ε            (&& F-fresh equivalences (! F))])
+    (solver-assert (current-solver) (list ε))
+    (solver-push (current-solver))
+    (solver-assert (current-solver) (list (apply && (vector->list α))))
+    (define π (solve (void)))
+    (while (sat? π)
+      (update-abs-ref x-vec r0 r1 π δ)
+      (solver-pop (current-solver) 1)
+      (define β (fresh-inc))
+      (define inc-clauses (apply && (vector->list (vector-map <=> α (vector-map && δ β)))))
+      (solver-assert (current-solver) (list inc-clauses))
+      (solver-push (current-solver))
+      (solver-assert (current-solver) (list (apply && (vector->list β))))
+      (set! π (solve (void)))
+      (set! α β)
+      (set! δ (make-vector n #t)))
     (reverse-substitute x-vec (r1->ψ r1))))
-
 
 (parse-dimacs-formula "benchmarks/arithmetic/in_qdimacs/ceiling32_bloqqer.qdimacs")
 
