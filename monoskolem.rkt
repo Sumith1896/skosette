@@ -1,4 +1,4 @@
-; Implementation of MonoSkolem from the paper 
+; Implementation of Skolem synthesis from the paper 
 ;
 ; The Rosette library can be found at http://emina.github.io/rosette/
 ;
