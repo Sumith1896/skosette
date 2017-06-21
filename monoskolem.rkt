@@ -206,7 +206,7 @@
     (reverse-substitute x-vec (r1->ψ r1))))
 
 
-(parse-dimacs-formula "benchmarks/arithmetic/in_qdimacs/ceiling32_bloqqer.qdimacs")
+(parse-dimacs-formula "test.qdimacs")
 
 ; (writeln r)
 ; (writeln num-var)
